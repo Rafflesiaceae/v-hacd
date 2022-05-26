@@ -1,0 +1,33 @@
+name: CI
+on: [push, pull_request, workflow_dispatch]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build-and-check:
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - { id: ubuntu-latest  , bin: "TestVHACD"     }
+          - { id: macos-latest   , bin: "TestVHACD"     }
+          - { id: windows-latest , bin: "Release/TestVHACD.exe" }
+    runs-on: ${{ matrix.os.id }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Configure CMake
+      working-directory: ./app
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build
+      working-directory: ./app
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Check
+      working-directory: ./app
+      run: ${{github.workspace}}/build/${{matrix.os.bin}}
